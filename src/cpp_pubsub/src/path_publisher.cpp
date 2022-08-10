@@ -19,6 +19,8 @@
 #include "std_msgs/msg/string.hpp"
 #include "nav_msgs/msg/path.hpp"
 #include "geometry_msgs/msg/pose_stamped.hpp"
+#include <iostream>
+#include <math.h>
 
 using namespace std::chrono_literals;
 
@@ -28,48 +30,51 @@ public:
   Path_publisher() : Node("Path_publisher"), count_(0)
   {   
 
-  while (theta_ <= 270)
-    {
-      x = 15 * cos(theta_);
-      y = 0.5 * 15 * sin(theta_);
 
+  // Declare variables for path generation.
+  float x,y, z = 0;
+  double radian;
+  for (int theta_=0; theta_<= 270; theta_=theta_+2)
+    {
+      // Compute current path point.
+      double pi = 3.14159265359;
+      radian = theta_ * (pi / 180);
+      x = 15 * cos(radian);
+      y = 0.5 * 15 * sin(radian);
+
+      // Fill current path point to a temporary variable.
       geometry_msgs::msg::PoseStamped tempPoint;
       tempPoint.pose.position.set__x(x);
       tempPoint.pose.position.set__y(y);
       tempPoint.pose.position.set__z(z);
-      message.header.frame_id = "map";
-      message.poses.push_back(tempPoint);
 
-      theta_ += 2;
+      // Add point to path.
+      path_message.header.frame_id = "map";
+      path_message.poses.push_back(tempPoint);
+
     }
     
-    std::cout<<message.poses.size();
-    
+    // Create publisher and timer.
     publisher_ = this->create_publisher<nav_msgs::msg::Path>("path_ellipse_partial", 10);
     timer_ = this->create_wall_timer(500ms, std::bind(&Path_publisher::timer_callback, this));
-    publisher_2 = this->create_publisher<std_msgs::msg::String>("topic_name", 10);
 
   }
 
 private:
   void timer_callback()
   {
-    auto message2 = std_msgs::msg::String();
-    message2.data = "Hello, world! " + std::to_string(count_++);
-    RCLCPP_INFO(this->get_logger(), "Publishing: '%s'", message2.data.c_str());
-    publisher_->publish(message);
-    publisher_2->publish(message2);
+    // Publish path.
+    RCLCPP_INFO(this->get_logger(), "Publishing path, path size: %d",static_cast<int>(path_message.poses.size()));
+    publisher_->publish(path_message);
   }
 
-  nav_msgs::msg::Path message;
-  rclcpp::Publisher<std_msgs::msg::String>::SharedPtr publisher_2;
+  // Declare variables.
+  nav_msgs::msg::Path path_message;
   rclcpp::Publisher<nav_msgs::msg::Path>::SharedPtr publisher_;
   rclcpp::TimerBase::SharedPtr timer_;
   size_t count_;
 
-  int x, y;
-  int theta_ = 0;
-  int z = 0;
+
 };
 
 int main(int argc, char *argv[])
