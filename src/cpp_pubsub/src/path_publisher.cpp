@@ -18,7 +18,7 @@
 #include "rclcpp/rclcpp.hpp"
 #include "std_msgs/msg/string.hpp"
 #include "nav_msgs/msg/path.hpp"
-#include "geometry_msgs/msg/point.hpp"
+#include "geometry_msgs/msg/pose_stamped.hpp"
 
 using namespace std::chrono_literals;
 
@@ -26,25 +26,28 @@ class Path_publisher : public rclcpp::Node
 {
 public:
   Path_publisher() : Node("Path_publisher"), count_(0)
-  {
+  {   
+
+  while (theta_ <= 270)
+    {
+      x = 15 * cos(theta_);
+      y = 0.5 * 15 * sin(theta_);
+
+      geometry_msgs::msg::PoseStamped tempPoint;
+      tempPoint.pose.position.set__x(x);
+      tempPoint.pose.position.set__y(y);
+      tempPoint.pose.position.set__z(z);
+      message.header.frame_id = "map";
+      message.poses.push_back(tempPoint);
+
+      theta_ += 2;
+    }
+    
+    std::cout<<message.poses.size();
+    
     publisher_ = this->create_publisher<nav_msgs::msg::Path>("path_ellipse_partial", 10);
     timer_ = this->create_wall_timer(500ms, std::bind(&Path_publisher::timer_callback, this));
     publisher_2 = this->create_publisher<std_msgs::msg::String>("topic_name", 10);
-
-    x = 15 * cos(theta_);
-    y = 0.5 * 15 * sin(theta_);
-
-    while (theta_ <= 270)
-    {
-      message.header.frame_id = "map";
-      message.poses[i].pose.position.set__x(x);
-      message.poses[i].pose.position.set__y(y);
-      message.poses[i].pose.position.set__z(z);
-
-      theta_ = +2;
-      i++;
-    }
-
 
   }
 
@@ -67,7 +70,6 @@ private:
   int x, y;
   int theta_ = 0;
   int z = 0;
-  size_t i = 0;
 };
 
 int main(int argc, char *argv[])
