@@ -23,16 +23,15 @@ public:
   for (int theta_=0; theta_<= 270; theta_=theta_+2)
     {
       // Compute current path point.
-      double pi = 3.14159265359;
-      radian = theta_ * (pi / 180);
+      radian = theta_ * (M_PI / 180);
       x = 15 * cos(radian);
       y = 0.5 * 15 * sin(radian);
 
       // Fill current path point to a temporary variable.
       geometry_msgs::msg::PoseStamped tempPoint;
-      tempPoint.pose.position.set__x(x);
-      tempPoint.pose.position.set__y(y);
-      tempPoint.pose.position.set__z(z);
+      tempPoint.pose.position.x=x;
+      tempPoint.pose.position.y=y;
+      tempPoint.pose.position.z=z;
 
       // Add point to path.
       path_message.header.frame_id = "map";
