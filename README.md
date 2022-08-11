@@ -5,10 +5,11 @@ Basic route publisher for ROS2 Galactic.
 
 
 ## Dependencies
-
+```bash
 nav_2msgs
 
 std_msgs
+```
 ## Installation
 
 Build and run dev_ws with following commands
