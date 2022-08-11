@@ -15,6 +15,9 @@ find_package(rclcpp REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(nav_msgs REQUIRED)
+find_package(eigen3_cmake_module REQUIRED)
+find_package(Eigen3)
+
 add_executable(talker src/publisher_member_function.cpp)
 ament_target_dependencies(talker rclcpp std_msgs geometry_msgs nav_msgs)
 
@@ -22,7 +25,7 @@ ament_target_dependencies(talker rclcpp std_msgs geometry_msgs nav_msgs)
   
 
 add_executable(path src/path_publisher.cpp)
-ament_target_dependencies(path rclcpp std_msgs geometry_msgs nav_msgs)
+ament_target_dependencies(path rclcpp std_msgs geometry_msgs nav_msgs Eigen3)
 
 
 
