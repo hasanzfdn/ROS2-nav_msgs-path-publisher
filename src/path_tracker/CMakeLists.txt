@@ -1,9 +1,10 @@
 cmake_minimum_required(VERSION 3.8)
-project(cpp_pubsub)
+project(path_tracker)
 
 if(NOT CMAKE_CXX_STANDARD)
   set(CMAKE_CXX_STANDARD 14)
 endif()
+
 
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra -Wpedantic)
@@ -18,15 +19,12 @@ find_package(nav_msgs REQUIRED)
 find_package(eigen3_cmake_module REQUIRED)
 find_package(Eigen3)
 
-
-add_executable(path src/path_publisher.cpp)
-ament_target_dependencies(path rclcpp std_msgs geometry_msgs nav_msgs Eigen3)
-
+add_executable(tracker src/path_subscriber.cpp)
+ament_target_dependencies(tracker rclcpp std_msgs geometry_msgs nav_msgs Eigen3)
 
 install(TARGETS
-  path
+  tracker
   DESTINATION lib/${PROJECT_NAME})
-
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)

@@ -2,10 +2,8 @@
 #include <memory>
 
 #include "rclcpp/rclcpp.hpp"
-#include "std_msgs/msg/string.hpp"
 #include "nav_msgs/msg/path.hpp"
 #include "geometry_msgs/msg/pose_stamped.hpp"
-#include <iostream>
 #include <math.h>
 #include <Eigen/Dense>
 
