@@ -42,6 +42,7 @@ public:
         float a=y-path_message.poses.back().pose.position.y;
         double yaw = atan2(a, b);
 
+
         // Transform to quaternion angles.
         float roll = 0, pitch = 0;    
         q = AngleAxisf(roll, Vector3f::UnitX())

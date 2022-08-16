@@ -1,63 +1,119 @@
 #include <functional>
 #include <memory>
-
 #include "rclcpp/rclcpp.hpp"
-#include "std_msgs/msg/string.hpp"
 #include "nav_msgs/msg/path.hpp"
 #include "geometry_msgs/msg/polygon_stamped.hpp"
 #include "geometry_msgs/msg/point32.hpp"
 #include "geometry_msgs/msg/pose_stamped.hpp"
-#include <iostream>
-#include <vector>
+#include "tf2/LinearMath/Quaternion.h"
+#include "tf2/LinearMath/Matrix3x3.h"
 #include <unistd.h>
+#include <complex.h>
 
 
 using std::placeholders::_1;
+using namespace std;
+typedef complex<double> complex_point;
 
 class PathSubscriber : public rclcpp::Node
 {
 public:
     PathSubscriber() : Node("Path_Subscriber")
   {
-      publisher_ = this->create_publisher<geometry_msgs::msg::PolygonStamped>("Vehicle_polygon", 10);
-      subscription_ = this->create_subscription<nav_msgs::msg::Path>("path_ellipse_partial",10, std::bind(&PathSubscriber::topic_callback, this, _1));
+      this->declare_parameter("frequency", 0.0);
+      this->declare_parameter("arac_genisligi", 0.0);
+      this->declare_parameter("path_topic", "");
+      this->declare_parameter("publish_vehicle_topic", "");
+
+
+      this->get_parameter("frequency", frequency);
+      this->get_parameter("arac_genisligi", arac_genisligi);
+      this->get_parameter("path_topic", path_topic);
+      this->get_parameter("publish_vehicle_topic", publish_vehicle_topic);
+
+      publisher_ = this->create_publisher<geometry_msgs::msg::PolygonStamped>(publish_vehicle_topic, 10);
+      subscription_ = this->create_subscription<nav_msgs::msg::Path>(path_topic,10, std::bind(&PathSubscriber::topic_callback, this, _1));
   }
 
-
 private:
+
+    geometry_msgs::msg::PolygonStamped rotate_point (geometry_msgs::msg::PoseStamped pose, geometry_msgs::msg::PolygonStamped vehicle){
+     double yaw,pitch,roll;
+
+     // Convert quaternion values to yaw,pitch,roll degree.
+     tf2::Quaternion q(pose.pose.orientation.x,pose.pose.orientation.y,pose.pose.orientation.z,pose.pose.orientation.w);
+     tf2::Matrix3x3 q_matrix(q);
+     q_matrix.getEulerYPR(yaw,pitch,roll);
+
+     // Define polygon variable.
+     geometry_msgs::msg::PolygonStamped temp_vehicle;
+
+     // Rotate each polygon points by using yaw angle.
+     for (auto point : vehicle.polygon.points){
+
+         // Rotate polygon about base_link.
+         complex_point base_link(pose.pose.position.x, pose.pose.position.y);
+         complex_point polygon(point.x, point.y);
+
+         // Compute x and y coordinates of new polygon point.
+         complex_point New_polygon_point=(polygon-base_link) * polar(1.0, yaw) + base_link;
+         // std::cout << "Old: "<< point.x <<std::endl << "New: "<<New_polygon_point.real() << std::endl;
+
+         // Assign x and y values to temp_vehicle variable.
+         geometry_msgs::msg::Point32 point_;
+         point_.x = New_polygon_point.real();
+         point_.y = New_polygon_point.imag();
+         temp_vehicle.polygon.points.push_back(point_);
+     }
+        return temp_vehicle;
+    }
+
+
+
   void topic_callback(const nav_msgs::msg::Path::ConstSharedPtr msg)
   {
+        // Get path message for once.
     if (path_message.empty())
     {
+        // Assign poses values to path message which comes from topic.
         path_message = msg->poses;
     }
+
+        // Turn each points on the path.
       for (long unsigned int i = 0; i < path_message.size(); ++i) {
            geometry_msgs::msg::Point32 point_;
+
+           // Create polygon points according to base_link points.( Base_link almost center of the car).
            vehicle.polygon.points.clear();
-           point_.x=path_message[i].pose.position.x+(0.5);
-           point_.y=path_message[i].pose.position.y-(0.5);
-           point_.z=path_message[i].pose.position.z+(0.5);
-           vehicle.polygon.points.push_back(point_);
+           point_.x=path_message[i].pose.position.x+((arac_genisligi/4)*3);
+           point_.y=path_message[i].pose.position.y-(arac_genisligi/4);
 
-           point_.x=path_message[i].pose.position.x-(0.5);
-           point_.y=path_message[i].pose.position.y-(0.5);
-           point_.z=path_message[i].pose.position.z+(0.5);
+           // Fill the vehicle polygon variable with each created point.
           vehicle.polygon.points.push_back(point_);
 
-           point_.x=path_message[i].pose.position.x-(0.5);
-           point_.y=path_message[i].pose.position.y+(1.5);
-           point_.z=path_message[i].pose.position.z+(0.5);
+
+           point_.x=path_message[i].pose.position.x-(arac_genisligi/4);
+           point_.y=path_message[i].pose.position.y-(arac_genisligi/4);
           vehicle.polygon.points.push_back(point_);
 
-           point_.x=path_message[i].pose.position.x+(0.5);
-           point_.y=path_message[i].pose.position.y+(1.5);
-           point_.z=path_message[i].pose.position.z+(0.5);
+           point_.x=path_message[i].pose.position.x-(arac_genisligi/4);
+           point_.y=path_message[i].pose.position.y+(arac_genisligi/4);
+
           vehicle.polygon.points.push_back(point_);
+
+           point_.x=path_message[i].pose.position.x+((arac_genisligi/4)*3);
+           point_.y=path_message[i].pose.position.y+(arac_genisligi/4);
+
+          vehicle.polygon.points.push_back(point_);
+
+          // Call rotate_point function for give orientation to the vehicle.
+          geometry_msgs::msg::PolygonStamped rotated_vehicle = rotate_point(path_message[i],vehicle);
           //Hz
-          sleep(0.8);
+          // Set the speed of the car.
+          usleep( 100000/frequency);
 
-          vehicle.header.frame_id = "map";
-          publisher_->publish(vehicle);
+          rotated_vehicle.header.frame_id = "map";
+          publisher_->publish(rotated_vehicle);
       }
 
 
@@ -65,10 +121,11 @@ private:
 
   rclcpp::Subscription<nav_msgs::msg::Path>::SharedPtr subscription_;
   rclcpp::Publisher<geometry_msgs::msg::PolygonStamped>::SharedPtr publisher_;
-
   std::vector<geometry_msgs::msg::PoseStamped> path_message;
   geometry_msgs::msg::PolygonStamped vehicle;
   rclcpp::TimerBase::SharedPtr Hz;
+  double frequency,arac_genisligi;
+  std::string path_topic,publish_vehicle_topic;
 
 };
 

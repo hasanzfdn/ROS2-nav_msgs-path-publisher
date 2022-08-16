@@ -6,9 +6,9 @@ Basic route publisher for ROS2 Galactic.
 
 ## Dependencies
 ```bash
-nav_2msgs
+nav2-msgs
 
-std_msgs
+std-msgs
 ```
 ## Installation
 
