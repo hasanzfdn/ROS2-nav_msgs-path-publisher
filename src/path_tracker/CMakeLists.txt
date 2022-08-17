@@ -23,8 +23,15 @@ add_executable(tracker src/path_subscriber.cpp)
 ament_target_dependencies(tracker rclcpp std_msgs geometry_msgs nav_msgs Eigen3)
 
 install(TARGETS
-  tracker
-  DESTINATION lib/${PROJECT_NAME})
+	tracker
+	DESTINATION lib/${PROJECT_NAME})
+
+    
+install(DIRECTORY
+    param
+    DESTINATION share/${PROJECT_NAME} )
+    
+   
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)

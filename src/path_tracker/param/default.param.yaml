@@ -1,0 +1,7 @@
+/tracker:
+  ros__parameters:
+    frequency: 20.0
+    car_length: 2.0
+    car_width: 1.0
+    path_topic: "/path_ellipse_partial"
+    publish_vehicle_topic: "/Vehicle_polygon"
