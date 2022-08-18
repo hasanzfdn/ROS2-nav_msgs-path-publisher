@@ -3,5 +3,7 @@
     frequency: 0.5
     car_length: 2.0
     car_width: 1.0
+    rear_overhang: 0.5
     path_topic: "/path_ellipse_partial"
     publish_vehicle_topic: "/Vehicle_polygon"
+    base_link_topic: "/base_link"
