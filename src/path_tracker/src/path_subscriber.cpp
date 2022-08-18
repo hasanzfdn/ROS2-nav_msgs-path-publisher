@@ -1,4 +1,5 @@
 #include <functional>
+#include <chrono>
 #include <memory>
 #include "rclcpp/rclcpp.hpp"
 #include "nav_msgs/msg/path.hpp"
@@ -48,7 +49,10 @@ public:
 
       publisher_ = this->create_publisher<geometry_msgs::msg::PolygonStamped>(publish_vehicle_topic, 10);
       subscription_ = this->create_subscription<nav_msgs::msg::Path>(path_topic,10, std::bind(&PathSubscriber::topic_callback, this, _1));
-  }
+      timer_ = this->create_wall_timer(500ms, std::bind(&PathSubscriber::create_polygon_points, this));
+
+
+      }
 
 private:
 
@@ -83,58 +87,63 @@ private:
         return temp_vehicle;
     }
 
+   void create_polygon_points (){
+        geometry_msgs::msg::Point32 point_;
 
+       std::cout << "create polygon points " << std::endl;
+
+        if (counter <= path_message.size()) {
+            // Create polygon points according to base_link points.( Base_link almost center of the car).
+            vehicle.polygon.points.clear();
+            point_.x = path_message[counter].pose.position.x + ((car_length / 4) * 3);
+            point_.y = path_message[counter].pose.position.y - (car_width / 2);
+
+            // Fill the vehicle polygon variable with each created point.
+            vehicle.polygon.points.push_back(point_);
+
+
+            point_.x = path_message[counter].pose.position.x - (car_length / 4);
+            point_.y = path_message[counter].pose.position.y - (car_width / 2);
+            vehicle.polygon.points.push_back(point_);
+
+            point_.x = path_message[counter].pose.position.x - (car_length / 4);
+            point_.y = path_message[counter].pose.position.y + (car_width / 2);
+
+            vehicle.polygon.points.push_back(point_);
+
+            point_.x = path_message[counter].pose.position.x + ((car_length / 4) * 3);
+            point_.y = path_message[counter].pose.position.y + (car_width / 2);
+
+            vehicle.polygon.points.push_back(point_);
+
+            counter++;
+            std::cout << "created vehicle." << std::endl;
+        }
+        else {
+            counter = 0;
+        }
+
+        vehicle =   rotate_point(path_message[counter],vehicle);
+        vehicle.header.frame_id = "map";
+        publisher_->publish(vehicle);
+       std::cout << "published vehicle." << std::endl;
+
+    }
 
 
   void topic_callback(const nav_msgs::msg::Path::ConstSharedPtr msg)
   {
-        // Get path message for once.
+      std::cout << "callbackk" << std::endl;
+
+      // Get path message for once.
     if (path_message.empty())
     {
         // Assign poses values to path message which comes from topic.
         path_message = msg->poses;
     }
 
-        // Turn each points on the path.
-      for (long unsigned int i = 0; i < path_message.size(); ++i) {
-           geometry_msgs::msg::Point32 point_;
-
-           // Create polygon points according to base_link points.( Base_link almost center of the car).
-           vehicle.polygon.points.clear();
-           point_.x=path_message[i].pose.position.x+((car_length/4)*3);
-           point_.y=path_message[i].pose.position.y-(  car_width/2);
-
-           // Fill the vehicle polygon variable with each created point.
-          vehicle.polygon.points.push_back(point_);
-
-
-           point_.x=path_message[i].pose.position.x-(  car_length/4);
-           point_.y=path_message[i].pose.position.y-(  car_width/2);
-          vehicle.polygon.points.push_back(point_);
-
-           point_.x=path_message[i].pose.position.x-(  car_length/4);
-           point_.y=path_message[i].pose.position.y+(  car_width/2);
-
-          vehicle.polygon.points.push_back(point_);
-
-           point_.x=path_message[i].pose.position.x+((  car_length/4)*3);
-           point_.y=path_message[i].pose.position.y+(  car_width/2);
-
-          vehicle.polygon.points.push_back(point_);
-
-          // Call rotate_point function for give orientation to the vehicle.
-          geometry_msgs::msg::PolygonStamped rotated_vehicle = rotate_point(path_message[i],vehicle);
-          //Hz
-          // Set the speed of the car.
-          usleep( 1000000/frequency);
-
-          rotated_vehicle.header.frame_id = "map";
-          publisher_->publish(rotated_vehicle);
-      }
-
-
   }
-
+  size_t counter = 0;
   rclcpp::Subscription<nav_msgs::msg::Path>::SharedPtr subscription_;
   rclcpp::Publisher<geometry_msgs::msg::PolygonStamped>::SharedPtr publisher_;
   std::vector<geometry_msgs::msg::PoseStamped> path_message;
@@ -142,6 +151,8 @@ private:
   rclcpp::TimerBase::SharedPtr Hz;
   double frequency,car_length, car_width;
   std::string path_topic,publish_vehicle_topic;
+  rclcpp::TimerBase::SharedPtr timer_;
+
 
 };
 
