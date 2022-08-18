@@ -36,7 +36,6 @@ typedef complex<double> complex_point;
         rclcpp::Publisher<geometry_msgs::msg::PolygonStamped>::SharedPtr publisher_;
         std::vector<geometry_msgs::msg::PoseStamped> path_message;
         geometry_msgs::msg::PolygonStamped vehicle;
-        rclcpp::TimerBase::SharedPtr Hz;
         double frequency,car_length, car_width;
         std::string path_topic,publish_vehicle_topic;
         rclcpp::TimerBase::SharedPtr timer_;
