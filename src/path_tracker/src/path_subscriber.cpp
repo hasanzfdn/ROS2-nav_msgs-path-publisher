@@ -1,27 +1,8 @@
-#include <functional>
-#include <chrono>
-#include <memory>
-#include "rclcpp/rclcpp.hpp"
-#include "nav_msgs/msg/path.hpp"
-#include "geometry_msgs/msg/polygon_stamped.hpp"
-#include "geometry_msgs/msg/point32.hpp"
-#include "geometry_msgs/msg/pose_stamped.hpp"
-#include "tf2/LinearMath/Quaternion.h"
-#include "tf2/LinearMath/Matrix3x3.h"
-#include <unistd.h>
-#include <complex.h>
-#include "rcl_yaml_param_parser/parser.h"
+
+#include "path_subscriber.hpp"
 
 
-
-using std::placeholders::_1;
-using namespace std;
-typedef complex<double> complex_point;
-
-class PathSubscriber : public rclcpp::Node
-{
-public:
-    PathSubscriber()
+PathSubscriber::PathSubscriber()
     : Node("tracker")
   {
       this->declare_parameter("frequency", 0.1);
@@ -45,18 +26,13 @@ public:
       RCLCPP_INFO(this->get_logger(), "publish_vehicle_topic: %s", publish_vehicle_topic.c_str());
       RCLCPP_INFO(this->get_logger(), "----------------------------------------------------");
 
-
-
       publisher_ = this->create_publisher<geometry_msgs::msg::PolygonStamped>(publish_vehicle_topic, 10);
       subscription_ = this->create_subscription<nav_msgs::msg::Path>(path_topic,10, std::bind(&PathSubscriber::topic_callback, this, _1));
       timer_ = this->create_wall_timer(frequency*1000ms, std::bind(&PathSubscriber::create_polygon_points, this));
-
-
       }
 
-private:
 
-    geometry_msgs::msg::PolygonStamped rotate_point (geometry_msgs::msg::PoseStamped pose, geometry_msgs::msg::PolygonStamped vehicle){
+    geometry_msgs::msg::PolygonStamped PathSubscriber::rotate_point (geometry_msgs::msg::PoseStamped pose, geometry_msgs::msg::PolygonStamped vehicle){
      double yaw,pitch,roll;
 
      // Convert quaternion values to yaw,pitch,roll degree.
@@ -76,7 +52,6 @@ private:
 
          // Compute x and y coordinates of new polygon point.
          complex_point New_polygon_point=(polygon-base_link) * polar(1.0, yaw) + base_link;
-         // std::cout << "Old: "<< point.x <<std::endl << "New: "<<New_polygon_point.real() << std::endl;
 
          // Assign x and y values to temp_vehicle variable.
          geometry_msgs::msg::Point32 point_;
@@ -87,7 +62,7 @@ private:
         return temp_vehicle;
     }
 
-   void create_polygon_points(){
+   void PathSubscriber::create_polygon_points(){
         geometry_msgs::msg::Point32 point_;
 
        std::cout << "create polygon points " << std::endl;
@@ -134,9 +109,7 @@ private:
     }
 
 
-  void topic_callback(const nav_msgs::msg::Path::ConstSharedPtr msg)
-  {
-      std::cout << "callbackk" << std::endl;
+  void PathSubscriber::topic_callback(const nav_msgs::msg::Path::ConstSharedPtr msg) {
 
       // Get path message for once.
     if (path_message.empty())
@@ -146,18 +119,7 @@ private:
     }
 
   }
-  size_t counter = 0;
-  rclcpp::Subscription<nav_msgs::msg::Path>::SharedPtr subscription_;
-  rclcpp::Publisher<geometry_msgs::msg::PolygonStamped>::SharedPtr publisher_;
-  std::vector<geometry_msgs::msg::PoseStamped> path_message;
-  geometry_msgs::msg::PolygonStamped vehicle;
-  rclcpp::TimerBase::SharedPtr Hz;
-  double frequency,car_length, car_width;
-  std::string path_topic,publish_vehicle_topic;
-  rclcpp::TimerBase::SharedPtr timer_;
 
-
-};
 
 int main(int argc, char *argv[])
 {

@@ -20,29 +20,28 @@ find_package(eigen3_cmake_module REQUIRED)
 find_package(Eigen3)
 
 add_executable(tracker src/path_subscriber.cpp)
+
+include_directories(
+        include
+        ${PCL_INCLUDE_DIRS}
+)
+
 ament_target_dependencies(tracker rclcpp std_msgs geometry_msgs nav_msgs Eigen3)
 
-install(TARGETS
-	tracker
-	DESTINATION lib/${PROJECT_NAME})
 
-    
+target_include_directories(tracker PUBLIC
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+        $<INSTALL_INTERFACE:include>
+        )
+
+install(TARGETS tracker
+        DESTINATION lib/${PROJECT_NAME})
+
+# install the launch directory
 install(DIRECTORY
-    param
-    launch
-    DESTINATION share/${PROJECT_NAME} )
-    
-   
-
-if(BUILD_TESTING)
-  find_package(ament_lint_auto REQUIRED)
-  # the following line skips the linter which checks for copyrights
-  # uncomment the line when a copyright and license is not present in all source files
-  #set(ament_cmake_copyright_FOUND TRUE)
-  # the following line skips cpplint (only works in a git repo)
-  # uncomment the line when this package is not in a git repo
-  #set(ament_cmake_cpplint_FOUND TRUE)
-  ament_lint_auto_find_test_dependencies()
-endif()
+        launch
+        param
+        DESTINATION share/${PROJECT_NAME}/
+        )
 
 ament_package()
