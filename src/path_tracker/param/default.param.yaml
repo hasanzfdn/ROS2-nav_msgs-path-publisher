@@ -1,6 +1,6 @@
 /tracker:
   ros__parameters:
-    frequency: 20.0
+    frequency: 0.5
     car_length: 2.0
     car_width: 1.0
     path_topic: "/path_ellipse_partial"
