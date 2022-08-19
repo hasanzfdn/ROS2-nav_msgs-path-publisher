@@ -1,6 +1,6 @@
 /tracker:
   ros__parameters:
-    frequency: 0.5
+    frequency: 1.0
     car_length: 2.0
     car_width: 1.0
     rear_overhang: 0.5

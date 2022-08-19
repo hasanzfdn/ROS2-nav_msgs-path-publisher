@@ -33,14 +33,19 @@ PathSubscriber::PathSubscriber()
       RCLCPP_INFO(this->get_logger(), "base_link_topic: %s", base_link_topic.c_str());
       RCLCPP_INFO(this->get_logger(), "----------------------------------------------------");
 
+
+      const auto period_ns = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::duration<double>(frequency));
+
       publisher_ = this->create_publisher<geometry_msgs::msg::PolygonStamped>(publish_vehicle_topic, 10);
       base_link_publisher_ = this->create_publisher<geometry_msgs::msg::PoseStamped>(base_link_topic, 10);
       subscription_ = this->create_subscription<nav_msgs::msg::Path>(path_topic,10, std::bind(&PathSubscriber::topic_callback, this, _1));
-      timer_ = this->create_wall_timer(frequency*1000ms, std::bind(&PathSubscriber::create_polygon_points, this));
-      }
+      timer_ = rclcpp::create_timer(this, get_clock(), period_ns, std::bind(&PathSubscriber::create_polygon_points, this));
 
 
-    geometry_msgs::msg::PolygonStamped PathSubscriber::rotate_point (geometry_msgs::msg::PoseStamped pose, geometry_msgs::msg::PolygonStamped vehicle){
+  }
+
+
+    geometry_msgs::msg::PolygonStamped PathSubscriber::rotate_point (geometry_msgs  ::msg::PoseStamped pose, geometry_msgs::msg::PolygonStamped vehicle){
      double yaw,pitch,roll;
 
      // Convert quaternion values to yaw,pitch,roll degree.
