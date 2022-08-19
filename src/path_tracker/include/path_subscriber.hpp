@@ -35,12 +35,13 @@ typedef complex<double> complex_point;
         rclcpp::Subscription<nav_msgs::msg::Path>::SharedPtr subscription_;
         rclcpp::Publisher<geometry_msgs::msg::PolygonStamped>::SharedPtr publisher_;
         rclcpp::Publisher<geometry_msgs::msg::PoseStamped>::SharedPtr base_link_publisher_;
-        std::vector<geometry_msgs::msg::PoseStamped> path_message;
-        geometry_msgs::msg::PoseStamped base_link;
-        geometry_msgs::msg::PolygonStamped vehicle;
+        std::vector<geometry_msgs::msg::PoseStamped> path_message_;
+        geometry_msgs::msg::PoseStamped base_link_;
+        geometry_msgs::msg::PolygonStamped vehicle_;
         double car_length, car_width, rear_overhang, frequency;
         std::string path_topic,publish_vehicle_topic, base_link_topic;
         rclcpp::TimerBase::SharedPtr timer_;
+
 
     };
 

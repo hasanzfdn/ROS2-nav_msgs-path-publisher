@@ -45,7 +45,7 @@ PathSubscriber::PathSubscriber()
   }
 
 
-    geometry_msgs::msg::PolygonStamped PathSubscriber::rotate_point (geometry_msgs  ::msg::PoseStamped pose, geometry_msgs::msg::PolygonStamped vehicle){
+    geometry_msgs::msg::PolygonStamped PathSubscriber::rotate_point (geometry_msgs  ::msg::PoseStamped pose, geometry_msgs::msg::PolygonStamped vehicle_){
      double yaw,pitch,roll;
 
      // Convert quaternion values to yaw,pitch,roll degree.
@@ -57,64 +57,64 @@ PathSubscriber::PathSubscriber()
      geometry_msgs::msg::PolygonStamped temp_vehicle;
 
      // Rotate each polygon points by using yaw angle.
-     for (auto point : vehicle.polygon.points){
+     for (auto point : vehicle_.polygon.points){
 
          // Rotate polygon about base_link.
-         complex_point base_link(pose.pose.position.x, pose.pose.position.y);
+         complex_point base_link_(pose.pose.position.x, pose.pose.position.y);
          complex_point polygon(point.x, point.y);
 
          // Compute x and y coordinates of new polygon point.
-         complex_point New_polygon_point=(polygon-base_link) * polar(1.0, yaw) + base_link;
+         complex_point New_polygon_point=(polygon-base_link_) * polar(1.0, yaw) + base_link_;
 
          // Assign x and y values to temp_vehicle variable.
-         geometry_msgs::msg::Point32 point_;
-         point_.x = New_polygon_point.real();
-         point_.y = New_polygon_point.imag();
-         temp_vehicle.polygon.points.push_back(point_);
+         geometry_msgs::msg::Point32 temp_point;
+         temp_point.x = New_polygon_point.real();
+         temp_point.y = New_polygon_point.imag();
+         temp_vehicle.polygon.points.push_back(temp_point);
      }
         return temp_vehicle;
     }
 
    void PathSubscriber::create_polygon_points(){
-        geometry_msgs::msg::Point32 point_;
+        geometry_msgs::msg::Point32 temp_point;
 
        std::cout << "create polygon points " << std::endl;
 
-       if(path_message.empty()){
+       if(path_message_.empty()){
            return;
        }
 
-        if (counter <= path_message.size()) {
+        if (counter <= path_message_.size()) {
 
             // Create polygon points according to base_link points.( Base_link almost center of the car).
-            vehicle.polygon.points.clear();
-            point_.x = path_message[counter].pose.position.x + (car_length - rear_overhang);
-            point_.y = path_message[counter].pose.position.y - (car_width / 2);
+            vehicle_.polygon.points.clear();
+            temp_point.x = path_message_[counter].pose.position.x + (car_length - rear_overhang);
+            temp_point.y = path_message_[counter].pose.position.y - (car_width / 2);
 
             // Fill the vehicle polygon variable with each created point.
-            vehicle.polygon.points.push_back(point_);
+            vehicle_.polygon.points.push_back(temp_point);
 
 
-            point_.x = path_message[counter].pose.position.x - (rear_overhang);
-            point_.y = path_message[counter].pose.position.y - (car_width / 2);
-            vehicle.polygon.points.push_back(point_);
+            temp_point.x = path_message_[counter].pose.position.x - (rear_overhang);
+            temp_point.y = path_message_[counter].pose.position.y - (car_width / 2);
+            vehicle_.polygon.points.push_back(temp_point);
 
-            point_.x = path_message[counter].pose.position.x - (rear_overhang);
-            point_.y = path_message[counter].pose.position.y + (car_width / 2);
-            vehicle.polygon.points.push_back(point_);
+            temp_point.x = path_message_[counter].pose.position.x - (rear_overhang);
+            temp_point.y = path_message_[counter].pose.position.y + (car_width / 2);
+            vehicle_.polygon.points.push_back(temp_point);
 
-            point_.x = path_message[counter].pose.position.x + (car_length - rear_overhang);
-            point_.y = path_message[counter].pose.position.y + (car_width / 2);
+            temp_point.x = path_message_[counter].pose.position.x + (car_length - rear_overhang);
+            temp_point.y = path_message_[counter].pose.position.y + (car_width / 2);
 
-            vehicle.polygon.points.push_back(point_);
+            vehicle_.polygon.points.push_back(temp_point);
 
-            base_link = path_message[counter];
+            base_link_ = path_message_[counter];
 
-            vehicle =  rotate_point(path_message[counter],vehicle);
-            vehicle.header.frame_id = "map";
-            base_link.header.frame_id = "map";
-            publisher_->publish(vehicle);
-            base_link_publisher_->publish(base_link);
+            vehicle_ =  rotate_point(path_message_[counter],vehicle_);
+            vehicle_.header.frame_id = "map";
+            base_link_.header.frame_id = "map";
+            publisher_->publish(vehicle_);
+            base_link_publisher_->publish(base_link_);
             std::cout << "published vehicle." << std::endl;
 
             counter++;
@@ -130,10 +130,10 @@ PathSubscriber::PathSubscriber()
   void PathSubscriber::topic_callback(const nav_msgs::msg::Path::ConstSharedPtr msg) {
 
       // Get path message for once.
-    if (path_message.empty())
+    if (path_message_.empty())
     {
         // Assign poses values to path message which comes from topic.
-        path_message = msg->poses;
+        path_message_ = msg->poses;
     }
 
   }
