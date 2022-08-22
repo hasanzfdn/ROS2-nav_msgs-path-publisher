@@ -38,7 +38,8 @@ typedef complex<double> complex_point;
         std::vector<geometry_msgs::msg::PoseStamped> path_message_;
         geometry_msgs::msg::PoseStamped base_link_;
         geometry_msgs::msg::PolygonStamped vehicle_;
-        double car_length, car_width, rear_overhang, frequency;
+        float_t car_length, car_width, rear_overhang;
+        float_t frequency;
         std::string path_topic,publish_vehicle_topic, base_link_topic;
         rclcpp::TimerBase::SharedPtr timer_;
 

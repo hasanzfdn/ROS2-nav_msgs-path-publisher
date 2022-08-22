@@ -1,11 +1,10 @@
 
 #include "path_subscriber.hpp"
 
-
 PathSubscriber::PathSubscriber()
     : Node("tracker")
   {
-      this->declare_parameter("frequency", 0.1);
+      this->declare_parameter("frequency", 200.0);
       this->declare_parameter("car_length", 2.0);
       this->declare_parameter("car_width", 1.0);
       this->declare_parameter("rear_overhang", 0.5);
@@ -33,8 +32,8 @@ PathSubscriber::PathSubscriber()
       RCLCPP_INFO(this->get_logger(), "base_link_topic: %s", base_link_topic.c_str());
       RCLCPP_INFO(this->get_logger(), "----------------------------------------------------");
 
-
-      const auto period_ns = (std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::duration<double>(1.0 / frequency)));
+      //using std::chrono_literals::operator""ms;
+      const auto period_ns = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::duration<float_t>(1.0 / frequency));
       publisher_ = this->create_publisher<geometry_msgs::msg::PolygonStamped>(publish_vehicle_topic, 10);
       base_link_publisher_ = this->create_publisher<geometry_msgs::msg::PoseStamped>(base_link_topic, 10);
       subscription_ = this->create_subscription<nav_msgs::msg::Path>(path_topic,10, std::bind(&PathSubscriber::topic_callback, this, _1));
@@ -77,39 +76,38 @@ PathSubscriber::PathSubscriber()
    void PathSubscriber::create_polygon_points(){
         geometry_msgs::msg::Point32 temp_point;
 
-       std::cout << "create polygon points " << std::endl;
 
        if(path_message_.empty()){
            return;
        }
 
-        if (counter <= path_message_.size()) {
+        if (counter < path_message_.size()) {
 
             // Create polygon points according to base_link points.( Base_link almost center of the car).
             vehicle_.polygon.points.clear();
-            temp_point.x = path_message_[counter].pose.position.x + (car_length - rear_overhang);
-            temp_point.y = path_message_[counter].pose.position.y - (car_width / 2);
+            temp_point.x = path_message_.at(counter).pose.position.x + (car_length - rear_overhang);
+            temp_point.y = path_message_.at(counter).pose.position.y - (car_width / 2);
 
             // Fill the vehicle polygon variable with each created point.
             vehicle_.polygon.points.push_back(temp_point);
 
 
-            temp_point.x = path_message_[counter].pose.position.x - (rear_overhang);
-            temp_point.y = path_message_[counter].pose.position.y - (car_width / 2);
+            temp_point.x = path_message_.at(counter).pose.position.x - (rear_overhang);
+            temp_point.y = path_message_.at(counter).pose.position.y - (car_width / 2);
             vehicle_.polygon.points.push_back(temp_point);
 
-            temp_point.x = path_message_[counter].pose.position.x - (rear_overhang);
-            temp_point.y = path_message_[counter].pose.position.y + (car_width / 2);
+            temp_point.x = path_message_.at(counter).pose.position.x - (rear_overhang);
+            temp_point.y = path_message_.at(counter).pose.position.y + (car_width / 2);
             vehicle_.polygon.points.push_back(temp_point);
 
-            temp_point.x = path_message_[counter].pose.position.x + (car_length - rear_overhang);
-            temp_point.y = path_message_[counter].pose.position.y + (car_width / 2);
+            temp_point.x = path_message_.at(counter).pose.position.x + (car_length - rear_overhang);
+            temp_point.y = path_message_.at(counter).pose.position.y + (car_width / 2);
 
             vehicle_.polygon.points.push_back(temp_point);
 
-            base_link_ = path_message_[counter];
+            base_link_ = path_message_.at(counter);
 
-            vehicle_ =  rotate_point(path_message_[counter],vehicle_);
+            vehicle_ =  rotate_point(path_message_.at(counter),vehicle_);
             vehicle_.header.frame_id = "map";
             base_link_.header.frame_id = "map";
             publisher_->publish(vehicle_);
