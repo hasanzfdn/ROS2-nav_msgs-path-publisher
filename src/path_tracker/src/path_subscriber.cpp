@@ -34,7 +34,7 @@ PathSubscriber::PathSubscriber()
       RCLCPP_INFO(this->get_logger(), "----------------------------------------------------");
 
 
-      const auto period_ns = (std::chrono::duration_cast<std::chrono::seconds>(std::chrono::duration<double>(1.0 / frequency)));
+      const auto period_ns = (std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::duration<double>(1.0 / frequency)));
       publisher_ = this->create_publisher<geometry_msgs::msg::PolygonStamped>(publish_vehicle_topic, 10);
       base_link_publisher_ = this->create_publisher<geometry_msgs::msg::PoseStamped>(base_link_topic, 10);
       subscription_ = this->create_subscription<nav_msgs::msg::Path>(path_topic,10, std::bind(&PathSubscriber::topic_callback, this, _1));
